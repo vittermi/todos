@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desk-sitter stretching routine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #edf1ef;
+    --surface: #ffffff;
+    --ink: #14262e;
+    --muted: #54686f;
+    --line: #cbd8d4;
+    --accent: #1f6f63;
+    --accent-ink: #ffffff;
+    --hl: #f2b544;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1b1f;
+      --surface: #172a30;
+      --ink: #e6efec;
+      --muted: #93a9a9;
+      --line: #26404a;
+      --accent: #5fc2ae;
+      --accent-ink: #0f1b1f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 1rem/1.55 "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 34rem; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+  h1 { font-size: 1.6rem; line-height: 1.2; margin: 0 0 .35rem; font-weight: 700; letter-spacing: -.01em; }
+  header p { margin: 0; color: var(--muted); }
+
+  .stage {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 1.5rem;
+    padding: 1.5rem 1.25rem;
+    margin: 1.5rem 0;
+  }
+  .ring { position: relative; width: min(13rem, 70vw); aspect-ratio: 1; margin: 0 auto 1.25rem; }
+  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .track { fill: none; stroke: var(--line); stroke-width: 10; }
+  .bar {
+    fill: none; stroke: var(--accent); stroke-width: 10; stroke-linecap: round;
+    stroke-dasharray: 553; stroke-dashoffset: 0;
+    transition: stroke-dashoffset .25s linear;
+  }
+  .time {
+    position: absolute; inset: 0; display: grid; place-content: center;
+    font-size: 2.9rem; font-weight: 700; letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .count { margin: 0; color: var(--muted); font-size: .9rem; }
+  h2 { margin: .1rem 0 .4rem; font-size: 1.4rem; line-height: 1.25; font-weight: 700; }
+  .side {
+    display: inline-block; margin: 0 0 .4rem; padding: .1rem .75rem;
+    border-radius: 99px; background: var(--hl); color: #1b1b1b;
+    font-weight: 600; font-size: .9rem;
+  }
+  .desc { margin: .25rem 0 1.4rem; }
+
+  .controls { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: .6rem; }
+  .btn {
+    font: inherit; font-weight: 600; cursor: pointer;
+    padding: .75rem 1rem; border-radius: .8rem;
+    border: 1px solid var(--line); background: transparent; color: var(--ink);
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible, .item:focus-visible, .sound input:focus-visible {
+    outline: 3px solid var(--accent); outline-offset: 2px;
+  }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .sound { display: inline-flex; gap: .5rem; align-items: center; margin-top: 1.1rem; color: var(--muted); font-size: .9rem; cursor: pointer; }
+  .sound input { accent-color: var(--accent); width: 1rem; height: 1rem; }
+
+  .list { list-style: none; margin: 0; padding: 0; }
+  .list li { margin-bottom: .4rem; }
+  .item {
+    width: 100%; display: flex; align-items: center; gap: .8rem; text-align: left;
+    font: inherit; color: var(--ink); cursor: pointer;
+    padding: .75rem 1rem; border-radius: .8rem;
+    background: var(--surface); border: 1px solid var(--line);
+  }
+  .item .n { width: 1.2rem; color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+  .item .t { flex: 1; }
+  .item .d { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .item[aria-current="step"] {
+    border-color: var(--accent); font-weight: 600;
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  }
+  .item.done .t, .item.done .d { color: var(--muted); }
+  .item.done .n { color: var(--accent); font-weight: 700; }
+
+  footer { margin-top: 1.5rem; color: var(--muted); font-size: .85rem; }
+  @media (prefers-reduced-motion: reduce) { .bar { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Desk-sitter stretching routine</h1>
+    <p>Eight stretches, about 10 minutes. Aim for gentle tension, never pain.</p>
+  </header>
+
+  <section class="stage" aria-label="Current stretch">
+    <div class="ring">
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <circle class="track" cx="100" cy="100" r="88"></circle>
+        <circle class="bar" id="bar" cx="100" cy="100" r="88"></circle>
+      </svg>
+      <div class="time" id="time" role="timer" aria-live="off">0:40</div>
+    </div>
+    <p class="count" id="count"></p>
+    <h2 id="name"></h2>
+    <span class="side" id="side" hidden></span>
+    <p class="desc" id="desc"></p>
+    <div class="controls">
+      <button class="btn" id="back" type="button">Back</button>
+      <button class="btn primary" id="play" type="button">Start</button>
+      <button class="btn" id="skip" type="button">Skip</button>
+    </div>
+    <label class="sound"><input type="checkbox" id="sound" checked> Play a sound when the timer changes</label>
+  </section>
+
+  <ol class="list" id="list"></ol>
+
+  <footer>
+    This is general information, not medical advice. If you have back, hip, or knee problems, or any stretch causes persistent pain, check with a physical therapist.
+  </footer>
+</main>
+
+<script>
+  // Hold times (seconds) sit inside the ranges from the routine. "sides" means the timer runs once per side.
+  const STRETCHES = [
+    { title: "Half-kneeling hip flexor stretch", sec: 40, sides: true,
+      desc: "Kneel on one knee (use a cushion), other foot flat in front. Tuck your tailbone under and squeeze the glute of the back leg, then shift your hips gently forward until you feel a stretch at the front of the back hip. Keep your ribs stacked over your pelvis rather than arching your lower back. Hold 30-45 seconds per side." },
+    { title: "Quad stretch", sec: 30, sides: true,
+      desc: "From the same position, or standing near a wall, bend the back knee and hold your foot toward your glute. Keep knees close together and your pelvis tucked. The quads pull on the hip from the front, so releasing them helps the hip flexors. Hold 30 seconds per side." },
+    { title: "Figure-4 glute stretch", sec: 40, sides: true,
+      desc: "Lie on your back with knees bent. Cross one ankle over the opposite knee, then pull the bottom thigh toward your chest until you feel a stretch in the outer hip and glute. Keep your head resting down and your top knee gently pressed away. Hold 30-45 seconds per side." },
+    { title: "Supine hamstring stretch", sec: 30, sides: true,
+      desc: "Lie on your back and loop a towel or strap around one foot. Extend that leg toward the ceiling, keeping a slight bend in the knee if needed. Keep the other leg relaxed on the floor. Hold 30 seconds per side, breathing slowly." },
+    { title: "Cat-cow", sec: 60, sides: false,
+      desc: "On hands and knees, inhale as you drop your belly and lift your chest and tailbone (cow), then exhale as you round your spine toward the ceiling (cat). Move slowly and smoothly through 8-10 rounds to mobilize the entire spine after being stuck in one posture." },
+    { title: "Thoracic extension over a chair or roller", sec: 45, sides: false,
+      desc: "Sit in a sturdy chair, hands behind your head, and gently arch your upper back over the chair back, keeping your lower back and ribs controlled. Alternatively, lie on a foam roller placed across your mid-back. Pause for 3-5 breaths, then move it up or down a few inches and repeat." },
+    { title: "Doorway chest stretch", sec: 30, sides: true,
+      desc: "Place your forearm on a door frame with the elbow at about shoulder height, and step through until you feel a stretch across the front of your chest and shoulder. Keep your ribs down and neck relaxed. Hold 30 seconds per side, and repeat with your elbow slightly higher or lower to hit different fibers." },
+    { title: "Upper trap and neck release", sec: 25, sides: true,
+      desc: "Sit tall and let one ear drop toward the same shoulder. Rest your hand lightly on your head for a little added weight, but don't pull. Let the opposite shoulder sink down. Hold 20-30 seconds per side." }
+  ];
+
+  // Expand into timed segments: one per side where relevant.
+  const segs = [];
+  STRETCHES.forEach((s, i) => {
+    if (s.sides) ["Left side", "Right side"].forEach(side => segs.push({ i, side, sec: s.sec }));
+    else segs.push({ i, side: null, sec: s.sec });
+  });
+
+  const C = 2 * Math.PI * 88;
+  const $ = id => document.getElementById(id);
+  const el = { bar: $("bar"), time: $("time"), count: $("count"), name: $("name"), side: $("side"),
+               desc: $("desc"), back: $("back"), play: $("play"), skip: $("skip"), list: $("list"), sound: $("sound") };
+
+  let cur = 0, remaining = segs[0].sec * 1000, endAt = 0, running = false, finished = false, timer = null, lock = null;
+
+  // Build the list once.
+  STRETCHES.forEach((s, i) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "item"; b.dataset.i = i;
+    b.innerHTML = '<span class="n"></span><span class="t"></span><span class="d"></span>';
+    b.querySelector(".t").textContent = s.title;
+    b.querySelector(".d").textContent = s.sides ? s.sec + " s each side" : s.sec + " s";
+    b.addEventListener("click", () => go(segs.findIndex(g => g.i === i)));
+    li.appendChild(b); el.list.appendChild(li);
+  });
+  const items = [...el.list.querySelectorAll(".item")];
+
+  function fmt(ms) {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  }
+
+  function render() {
+    const seg = segs[cur], s = STRETCHES[seg.i];
+    el.time.textContent = finished ? "Done" : fmt(remaining);
+    el.bar.style.strokeDashoffset = finished ? C : C * (1 - remaining / (seg.sec * 1000));
+    el.bar.style.strokeDasharray = C;
+    el.count.textContent = finished ? "Routine complete" : "Stretch " + (seg.i + 1) + " of " + STRETCHES.length;
+    el.name.textContent = finished ? "Nice work" : s.title;
+    el.desc.textContent = finished ? "Repeat this routine daily, and stand up for a minute or two every 30-60 minutes of sitting." : s.desc;
+    el.side.hidden = finished || !seg.side;
+    el.side.textContent = seg.side || "";
+    el.play.textContent = finished ? "Restart" : running ? "Pause" : (remaining < seg.sec * 1000 || cur > 0) ? "Resume" : "Start";
+    el.back.disabled = cur === 0 && remaining >= seg.sec * 1000 && !finished;
+    el.skip.disabled = finished;
+    items.forEach((b, i) => {
+      const done = finished || i < seg.i;
+      b.classList.toggle("done", done);
+      b.querySelector(".n").textContent = done ? "\u2713" : i + 1;
+      if (!finished && i === seg.i) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
+    });
+  }
+
+  function cue(long) {
+    if (!el.sound.checked) return;
+    try {
+      const ctx = cue.ctx || (cue.ctx = new (window.AudioContext || window.webkitAudioContext)());
+      [0, long ? 0.25 : 0].forEach((delay, k) => {
+        if (k === 1 && !long) return;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.frequency.value = 660; o.connect(g); g.connect(ctx.destination);
+        const t = ctx.currentTime + delay;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.2, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+        o.start(t); o.stop(t + 0.22);
+      });
+    } catch (e) {}
+    if (navigator.vibrate) navigator.vibrate(long ? [150, 80, 150] : 150);
+  }
+
+  async function holdScreen(on) {
+    try {
+      if (on && "wakeLock" in navigator) lock = await navigator.wakeLock.request("screen");
+      else if (lock) { await lock.release(); lock = null; }
+    } catch (e) {}
+  }
+
+  function tick() {
+    remaining = endAt - Date.now();
+    if (remaining <= 0) advance(true);
+    render();
+  }
+
+  function start() {
+    if (finished) { finished = false; cur = 0; remaining = segs[0].sec * 1000; }
+    running = true; endAt = Date.now() + remaining;
+    clearInterval(timer); timer = setInterval(tick, 200);
+    holdScreen(true); render();
+  }
+  function pause() {
+    running = false; clearInterval(timer);
+    remaining = Math.max(0, endAt - Date.now());
+    holdScreen(false); render();
+  }
+  function go(n) {
+    finished = false;
+    cur = Math.min(Math.max(n, 0), segs.length - 1);
+    remaining = segs[cur].sec * 1000;
+    if (running) endAt = Date.now() + remaining;
+    render();
+  }
+  function advance(auto) {
+    if (cur >= segs.length - 1) {
+      running = false; finished = true; clearInterval(timer); holdScreen(false);
+      if (auto) cue(true);
+      return;
+    }
+    go(cur + 1);
+    if (auto) cue(false);
+  }
+
+  el.play.addEventListener("click", () => { finished ? start() : running ? pause() : start(); });
+  el.skip.addEventListener("click", () => advance(false));
+  el.back.addEventListener("click", () => {
+    // Restart the current segment first; a second press goes to the previous one.
+    if (remaining < segs[cur].sec * 1000 - 1500) go(cur); else go(cur - 1);
+  });
+
+  render();
+</script>
+</body>
+</html>
